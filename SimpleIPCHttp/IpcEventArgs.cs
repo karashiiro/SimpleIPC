@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace SimpleIPC
+namespace SimpleIPCHttp
 {
     public class IpcEventArgs : EventArgs
     {

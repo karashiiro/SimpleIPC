@@ -1,4 +1,4 @@
-﻿namespace SimpleIPC.Tests
+﻿namespace SimpleIPCHttp.Tests
 {
     public class DummierClass
     {

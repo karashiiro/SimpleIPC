@@ -2,7 +2,7 @@
 using System.Threading.Tasks;
 using NUnit.Framework;
 
-namespace SimpleIPC.Tests
+namespace SimpleIPCHttp.Tests
 {
     [TestFixture]
     public class IpcInterfaceBenchmarks

@@ -7,7 +7,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
 
-namespace SimpleIPC
+namespace SimpleIPCHttp
 {
     public class IpcInterface : IDisposable
     {

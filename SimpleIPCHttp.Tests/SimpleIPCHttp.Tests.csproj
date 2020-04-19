@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\SimpleIPC\SimpleIPC.csproj" />
+    <ProjectReference Include="..\SimpleIPCHttp\SimpleIPCHttp.csproj" />
   </ItemGroup>
 
 </Project>
