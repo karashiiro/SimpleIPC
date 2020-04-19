@@ -1,10 +1,11 @@
 ﻿using System;
 using System.IO;
+using System.Net;
 using System.Net.Http;
+using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
-using PeanutButter.SimpleHTTPServer;
 
 namespace SimpleIPC
 {
@@ -14,12 +15,7 @@ namespace SimpleIPC
 
         private readonly bool _httpExternal;
         private readonly HttpClient _client;
-        private readonly HttpServer _server;
-
-        /// <summary>
-        /// The Action to employ when logging (defaults to logging to the console).
-        /// </summary>
-        public Action<string> LogAction { get => _server.LogAction; set => _server.LogAction = value; }
+        private readonly HttpListener _server;
 
         /// <summary>
         /// The address of the partner process's IPC interface.
@@ -39,7 +35,7 @@ namespace SimpleIPC
         /// <summary>
         /// The port of this interface.
         /// </summary>
-        public int Port => _server.Port;
+        public int Port { get; }
 
         #region Constructors
         /// <summary>
@@ -48,17 +44,14 @@ namespace SimpleIPC
         /// </summary>
         public IpcInterface(HttpClient client, int port, int partnerPort, Action<string> logAction)
         {
-            _client = client;
-            if (port == 0)
-            {
-                _server = new HttpServer { LogAction = logAction };
-            }
-            else
-            {
-                _server = new HttpServer(port, logAction);
-            }
-            _server.AddJsonDocumentHandler((processor, stream) => ReceivedMessage(stream));
+            Port = port != 0 ? port : FreeTcpPort();
             PartnerPort = partnerPort != 0 ? partnerPort : Port + 1;
+
+            _client = client;
+            _server = new HttpListener();
+            _server.Prefixes.Add(Address.AbsoluteUri);
+            _server.Start();
+            Task.Run(ListenerLoop);
         }
 
         /// <summary>
@@ -111,21 +104,29 @@ namespace SimpleIPC
         {
             OnMessageReceived += (sender, e) =>
             {
+                T obj;
                 var settings = new JsonSerializerSettings
                 {
                     MissingMemberHandling = MissingMemberHandling.Error,
                 };
-                var obj = JsonConvert.DeserializeObject<T>(e.SerializedObject, settings);
+                try
+                {
+                    obj = JsonConvert.DeserializeObject<T>(e.SerializedObject, settings);
+                }
+                catch (JsonSerializationException)
+                {
+                    return;
+                }
                 action(obj);
             };
         }
 
-        public async Task<HttpResponseMessage> SendMessage<T>(T obj)
+        public async Task SendMessage<T>(T obj)
         {
             var json = JsonConvert.SerializeObject(obj);
             using var messageBytes = new ByteArrayContent(Encoding.UTF8.GetBytes(json));
             // ReSharper disable once AsyncConverter.AsyncAwaitMayBeElidedHighlighting
-            return await _client.PostAsync(PartnerAddress, messageBytes).ConfigureAwait(false);
+            await _client.PostAsync(PartnerAddress, messageBytes).ConfigureAwait(false);
         }
 
         private byte[] ReceivedMessage(Stream stream)
@@ -134,7 +135,7 @@ namespace SimpleIPC
                 throw new ArgumentNullException(nameof(stream));
             using var memoryStream = new MemoryStream();
             stream.CopyTo(memoryStream);
-            var obj = Encoding.UTF8.GetString(memoryStream.ToArray());
+            var obj = Encoding.UTF8.GetString(memoryStream.GetBuffer());
             InvokeOnMessageReceived(obj);
             return Array.Empty<byte>();
         }
@@ -145,13 +146,46 @@ namespace SimpleIPC
             handler?.Invoke(this, new IpcEventArgs { SerializedObject = obj });
         }
 
+        private void ListenerLoop()
+        {
+            while (true)
+            {
+                HttpListenerContext context;
+                try
+                {
+                    context = _server.GetContext();
+                }
+                catch (ObjectDisposedException)
+                {
+                    return;
+                }
+                var request = context.Request;
+                var resBytes = ReceivedMessage(request.InputStream);
+                var response = context.Response;
+                response.ContentLength64 = resBytes.Length;
+                var resOStream = response.OutputStream;
+                resOStream.Write(resBytes, 0, resBytes.Length);
+                response.Close();
+            }
+        }
+
+        // https://stackoverflow.com/a/150974
+        private static int FreeTcpPort()
+        {
+            var l = new TcpListener(IPAddress.Loopback, 0);
+            l.Start();
+            var port = ((IPEndPoint)l.LocalEndpoint).Port;
+            l.Stop();
+            return port;
+        }
+
         #region IDisposable Support
         protected virtual void Dispose(bool disposing)
         {
             if (disposing)
             {
                 if (!_httpExternal) _client.Dispose();
-                _server.Dispose();
+                _server.Close();
             }
         }
 

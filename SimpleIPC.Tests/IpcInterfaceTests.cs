@@ -97,12 +97,7 @@ namespace SimpleIPC.Tests
             i1.On<DummierClass>(dummierClass => {});
             await i2.SendMessage(new DummierClass());
 
-            var iterations = 0;
-            while (spinLock && iterations < SpinlockWait * 30)
-            {
-                await Task.Delay(SpinlockWait);
-                iterations++;
-            }
+            await Task.Delay(SpinlockWait * 5000);
 
             Assert.IsTrue(spinLock);
         }
