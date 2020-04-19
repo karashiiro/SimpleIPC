@@ -49,7 +49,14 @@ namespace SimpleIPC
         public IpcInterface(HttpClient client, int port, int partnerPort, Action<string> logAction)
         {
             _client = client;
-            _server = new HttpServer(port, logAction);
+            if (port == 0)
+            {
+                _server = new HttpServer { LogAction = logAction };
+            }
+            else
+            {
+                _server = new HttpServer(port, logAction);
+            }
             _server.AddJsonDocumentHandler((processor, stream) => ReceivedMessage(stream));
             PartnerPort = partnerPort != 0 ? partnerPort : Port + 1;
         }
@@ -104,25 +111,21 @@ namespace SimpleIPC
         {
             OnMessageReceived += (sender, e) =>
             {
-                T obj;
-                try
+                var settings = new JsonSerializerSettings
                 {
-                    obj = JsonConvert.DeserializeObject<T>(e.SerializedObject);
-                }
-                catch (JsonReaderException)
-                {
-                    return;
-                }
-
+                    MissingMemberHandling = MissingMemberHandling.Error,
+                };
+                var obj = JsonConvert.DeserializeObject<T>(e.SerializedObject, settings);
                 action(obj);
             };
         }
 
-        public Task<HttpResponseMessage> SendMessage<T>(T obj)
+        public async Task<HttpResponseMessage> SendMessage<T>(T obj)
         {
             var json = JsonConvert.SerializeObject(obj);
             using var messageBytes = new ByteArrayContent(Encoding.UTF8.GetBytes(json));
-            return _client.PostAsync(PartnerAddress, messageBytes);
+            // ReSharper disable once AsyncConverter.AsyncAwaitMayBeElidedHighlighting
+            return await _client.PostAsync(PartnerAddress, messageBytes).ConfigureAwait(false);
         }
 
         private byte[] ReceivedMessage(Stream stream)
@@ -131,7 +134,7 @@ namespace SimpleIPC
                 throw new ArgumentNullException(nameof(stream));
             using var memoryStream = new MemoryStream();
             stream.CopyTo(memoryStream);
-            var obj = Encoding.UTF8.GetString(memoryStream.GetBuffer());
+            var obj = Encoding.UTF8.GetString(memoryStream.ToArray());
             InvokeOnMessageReceived(obj);
             return Array.Empty<byte>();
         }

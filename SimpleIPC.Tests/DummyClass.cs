@@ -2,7 +2,7 @@
 {
     public class DummyClass
     {
-        public bool DummyField1 { get; set; }
-        public int DummyField2 { get; set; }
+        public bool DummyProperty1 { get; set; }
+        public int DummyProperty2 { get; set; }
     }
 }
