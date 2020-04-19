@@ -15,7 +15,7 @@ namespace SimpleIPCHttp.Tests
         // ReSharper restore InconsistentNaming
 
         [Test]
-        public async Task SendMessage_AvgTimeIsBelow500Ms()
+        public async Task SendMessage_AvgTimeIsBelow20Ms()
         {
             i1 = new IpcInterface();
             i2 = new IpcInterface(i1.PartnerPort, i1.Port);
@@ -31,7 +31,7 @@ namespace SimpleIPCHttp.Tests
             }
 
             var averageMs = stopwatch.ElapsedMilliseconds / Iterations;
-            Assert.IsTrue(averageMs <= 500, "Expected <=500ms, got {0}ms", averageMs);
+            Assert.IsTrue(averageMs <= 20, "Expected <=20ms, got {0}ms", averageMs);
         }
 
         [Test]

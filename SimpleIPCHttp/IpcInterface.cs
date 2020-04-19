@@ -39,10 +39,10 @@ namespace SimpleIPCHttp
 
         #region Constructors
         /// <summary>
-        /// Constructs a new IPC interface using the provided <see cref="HttpClient"/>, port, partner port,
-        /// and log action. Leaving the partner port at 0 will set it to the local server's port plus 1.
+        /// Constructs a new IPC interface using the provided <see cref="HttpClient"/>, port, and partner port.
+        /// Leaving the partner port at 0 will set it to the local server's port plus 1.
         /// </summary>
-        public IpcInterface(HttpClient client, int port, int partnerPort, Action<string> logAction)
+        public IpcInterface(HttpClient client, int port, int partnerPort)
         {
             Port = port != 0 ? port : FreeTcpPort();
             PartnerPort = partnerPort != 0 ? partnerPort : Port + 1;
@@ -55,17 +55,9 @@ namespace SimpleIPCHttp
         }
 
         /// <summary>
-        /// Constructs a new IPC interface using the provided <see cref="HttpClient"/>, port, and partner port.
-        /// </summary>
-        public IpcInterface(HttpClient client, int port, int partnerPort) : this(client, port, partnerPort, s => {})
-        {
-            _httpExternal = true;
-        }
-
-        /// <summary>
         /// Constructs a new IPC interface using the provided <see cref="HttpClient"/> and port.
         /// </summary>
-        public IpcInterface(HttpClient client, int port) : this(client, port, 0, s => {})
+        public IpcInterface(HttpClient client, int port) : this(client, port, 0)
         {
             _httpExternal = true;
         }
@@ -73,7 +65,7 @@ namespace SimpleIPCHttp
         /// <summary>
         /// Constructs a new IPC interface using the provided <see cref="HttpClient"/>.
         /// </summary>
-        public IpcInterface(HttpClient client) : this(client, 0, 0, s => {})
+        public IpcInterface(HttpClient client) : this(client, 0, 0)
         {
             _httpExternal = true;
         }
@@ -81,21 +73,21 @@ namespace SimpleIPCHttp
         /// <summary>
         /// Constructs a new IPC interface using the provided port and partner port.
         /// </summary>
-        public IpcInterface(int port, int partnerPort) : this(new HttpClient(), port, partnerPort, s => {})
+        public IpcInterface(int port, int partnerPort) : this(new HttpClient(), port, partnerPort)
         {
         }
 
         /// <summary>
         /// Constructs a new IPC interface using the provided port.
         /// </summary>
-        public IpcInterface(int port) : this(new HttpClient(), port, 0, s => {})
+        public IpcInterface(int port) : this(new HttpClient(), port, 0)
         {
         }
 
         /// <summary>
         /// Constructs a new IPC interface using a random port.
         /// </summary>
-        public IpcInterface() : this(new HttpClient(), 0, 0, s => {})
+        public IpcInterface() : this(new HttpClient(), 0, 0)
         {
         }
         #endregion
