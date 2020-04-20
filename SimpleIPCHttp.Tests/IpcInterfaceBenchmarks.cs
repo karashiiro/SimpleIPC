@@ -7,7 +7,7 @@ namespace SimpleIPCHttp.Tests
     [TestFixture]
     public class IpcInterfaceBenchmarks
     {
-        private const int Iterations = 100;
+        private const int Iterations = 1000;
 
         // ReSharper disable InconsistentNaming
         private IpcInterface i1;
@@ -15,7 +15,7 @@ namespace SimpleIPCHttp.Tests
         // ReSharper restore InconsistentNaming
 
         [Test]
-        public async Task SendMessage_AvgTimeIsBelow20Ms()
+        public async Task SendMessage_AvgTimeIsBelow2Ms()
         {
             i1 = new IpcInterface();
             i2 = new IpcInterface(i1.PartnerPort, i1.Port);
@@ -31,11 +31,11 @@ namespace SimpleIPCHttp.Tests
             }
 
             var averageMs = stopwatch.ElapsedMilliseconds / Iterations;
-            Assert.IsTrue(averageMs <= 20, "Expected <=20ms, got {0}ms", averageMs);
+            Assert.IsTrue(averageMs <= 2, "Expected <=2ms, got {0}ms", averageMs);
         }
 
         [Test]
-        public async Task ReceiveMessage_AvgTimeIsBelow20Ms()
+        public async Task ReceiveMessage_AvgTimeIsBelow2Ms()
         {
             i1 = new IpcInterface();
             i2 = new IpcInterface(i1.PartnerPort, i1.Port);
@@ -59,7 +59,7 @@ namespace SimpleIPCHttp.Tests
             }
 
             var averageMs = stopwatch.ElapsedMilliseconds / Iterations;
-            Assert.IsTrue(averageMs <= 20, "Expected <=20ms, got {0}ms", averageMs);
+            Assert.IsTrue(averageMs <= 2, "Expected <=2ms, got {0}ms", averageMs);
         }
     }
 }

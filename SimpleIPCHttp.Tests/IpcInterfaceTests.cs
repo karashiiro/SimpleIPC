@@ -116,6 +116,7 @@ namespace SimpleIPCHttp.Tests
             var program = Process.Start(path, $"{i1.PartnerPort} {i1.Port}");
             while (spinLock)
                 await Task.Delay(SpinlockWait);
+            program.Kill();
         }
 
         private async Task SpinlockForMessage()
