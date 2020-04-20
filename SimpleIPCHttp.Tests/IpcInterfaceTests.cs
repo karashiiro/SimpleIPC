@@ -1,4 +1,8 @@
+using System;
+using System.Diagnostics;
+using System.IO;
 using System.Net.Http;
+using System.Reflection;
 using System.Threading.Tasks;
 using NUnit.Framework;
 
@@ -18,7 +22,7 @@ namespace SimpleIPCHttp.Tests
         public void Teardown()
         {
             i1.Dispose();
-            i2.Dispose();
+            i2?.Dispose();
         }
 
         [Test]
@@ -100,6 +104,18 @@ namespace SimpleIPCHttp.Tests
             await Task.Delay(SpinlockWait * 5000);
 
             Assert.IsTrue(spinLock);
+        }
+
+        [Test]
+        public async Task SendMessage_WorksWithActualChildProcess()
+        {
+            i1 = new IpcInterface();
+            var spinLock = true;
+            i1.On<DummyClass>(dummyClass => { spinLock = false; });
+            var path = Path.Combine(TestContext.CurrentContext.TestDirectory, "..", "..", "..", "..", "SimpleIPCHttp.TestDummy", "bin", "Debug", "netcoreapp3.1", "SimpleIPCHttp.TestDummy.exe");
+            var program = Process.Start(path, $"{i1.PartnerPort} {i1.Port}");
+            while (spinLock)
+                await Task.Delay(SpinlockWait);
         }
 
         private async Task SpinlockForMessage()
