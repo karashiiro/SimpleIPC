@@ -1,5 +1,5 @@
 # SimpleIPCHttp
-A simple IPC library. It can be used between processes on the same machine over localhost. If you really wanted to,
+A simple IPC library. It can be used between processes on the same machine over localhost. If you really want to,
 you can even use this to communicate between parts of the same application.
 
 ## Installation
